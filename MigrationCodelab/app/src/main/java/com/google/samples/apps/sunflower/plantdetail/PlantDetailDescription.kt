@@ -48,7 +48,19 @@ fun PlantDetailDescription(plantDetailViewModel: PlantDetailViewModel) {
 
 @Composable
 fun PlantDetailContent(plant: Plant) {
-    PlantName(name = plant.name)
+    Column(modifier = Modifier.padding(dimensionResource(R.dimen.margin_normal))) {
+        PlantName(name = plant.name)
+        PlantWatering(wateringInterval = plant.wateringInterval)
+    }
+}
+
+@Preview
+@Composable
+private fun PlantDetailContentPreview() {
+    val plant = Plant("id", "Apple", "description", 3, 30, "")
+    MaterialTheme {
+        PlantDetailContent(plant)
+    }
 }
 
 @Composable
