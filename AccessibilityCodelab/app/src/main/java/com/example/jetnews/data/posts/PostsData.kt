@@ -59,10 +59,10 @@ val paragraphsPost1 = listOf(
     Paragraph(
         ParagraphType.CodeBlock,
         "include ':app'\n" +
-            "include ':features:module1'\n" +
-            "include ':features:module2'\n" +
-            "include ':features:module3'\n" +
-            "include ':features:module4'"
+                "include ':features:module1'\n" +
+                "include ':features:module2'\n" +
+                "include ':features:module3'\n" +
+                "include ':features:module4'"
     ),
     Paragraph(
         ParagraphType.Text,
