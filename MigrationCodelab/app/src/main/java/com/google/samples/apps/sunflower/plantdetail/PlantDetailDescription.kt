@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -52,16 +53,19 @@ fun PlantDetailDescription(plantDetailViewModel: PlantDetailViewModel) {
 
 @Composable
 fun PlantDetailContent(plant: Plant) {
-    Column(modifier = Modifier.padding(dimensionResource(R.dimen.margin_normal))) {
-        PlantName(name = plant.name)
-        PlantWatering(wateringInterval = plant.wateringInterval)
+    Surface {
+        Column(modifier = Modifier.padding(dimensionResource(R.dimen.margin_normal))) {
+            PlantName(name = plant.name)
+            PlantWatering(wateringInterval = plant.wateringInterval)
+            PlantDescription(plant.description)
+        }
     }
 }
 
 @Preview
 @Composable
 private fun PlantDetailContentPreview() {
-    val plant = Plant("id", "Apple", "description", 3, 30, "")
+    val plant = Plant("id", "Apple", "HTML<br><br>description", 3, 30, "")
     MaterialTheme {
         PlantDetailContent(plant)
     }
