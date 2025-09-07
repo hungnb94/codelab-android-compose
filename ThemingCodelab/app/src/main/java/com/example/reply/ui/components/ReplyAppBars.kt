@@ -16,6 +16,7 @@
 
 package com.example.reply.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,10 +45,12 @@ import com.example.reply.data.Email
 @Composable
 fun ReplySearchBar(modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .background(color = MaterialTheme.colorScheme.background),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = Icons.Default.Search,
@@ -56,17 +59,19 @@ fun ReplySearchBar(modifier: Modifier = Modifier) {
         )
         Text(
             text = stringResource(id = R.string.search_replies),
-            modifier = Modifier
-                .weight(1f)
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .padding(16.dp),
             style = MaterialTheme.typography.bodyMedium,
         )
         ReplyProfileImage(
             drawableResource = R.drawable.avatar_6,
             description = stringResource(id = R.string.profile),
-            modifier = Modifier
-                .padding(12.dp)
-                .size(32.dp)
+            modifier =
+                Modifier
+                    .padding(12.dp)
+                    .size(32.dp),
         )
     }
 }
@@ -77,26 +82,30 @@ fun EmailDetailAppBar(
     email: Email,
     isFullScreen: Boolean,
     modifier: Modifier = Modifier,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
 ) {
     TopAppBar(
         modifier = modifier,
         title = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = if (isFullScreen) Alignment.CenterHorizontally
-                else Alignment.Start
+                horizontalAlignment =
+                    if (isFullScreen) {
+                        Alignment.CenterHorizontally
+                    } else {
+                        Alignment.Start
+                    },
             ) {
                 Text(
                     text = email.subject,
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
                     modifier = Modifier.padding(top = 4.dp),
                     text = "${email.threads.size} ${stringResource(id = R.string.messages)}",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.outline
+                    color = MaterialTheme.colorScheme.outline,
                 )
             }
         },
@@ -105,15 +114,16 @@ fun EmailDetailAppBar(
                 FilledIconButton(
                     onClick = onBackPressed,
                     modifier = Modifier.padding(8.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    )
+                    colors =
+                        IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                        ),
                 ) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
                         contentDescription = stringResource(id = R.string.back_button),
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(14.dp),
                     )
                 }
             }
@@ -125,9 +135,9 @@ fun EmailDetailAppBar(
                 Icon(
                     imageVector = Icons.Default.MoreVert,
                     contentDescription = stringResource(id = R.string.more_options_button),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-        }
+        },
     )
 }

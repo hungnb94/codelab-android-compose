@@ -39,12 +39,12 @@ import com.example.reply.R
 fun ReplyApp(
     replyHomeUIState: ReplyHomeUIState,
     closeDetailScreen: () -> Unit = {},
-    navigateToDetail: (Long) -> Unit = {}
+    navigateToDetail: (Long) -> Unit = {},
 ) {
     ReplyAppContent(
         replyHomeUIState = replyHomeUIState,
         closeDetailScreen = closeDetailScreen,
-        navigateToDetail = navigateToDetail
+        navigateToDetail = navigateToDetail,
     )
 }
 
@@ -55,20 +55,19 @@ fun ReplyAppContent(
     closeDetailScreen: () -> Unit,
     navigateToDetail: (Long) -> Unit,
 ) {
-
     val selectedDestination = remember { mutableStateOf(ReplyRoute.INBOX) }
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
+        modifier =
+            modifier
+                .fillMaxSize(),
     ) {
-
         if (selectedDestination.value == ReplyRoute.INBOX) {
             ReplyInboxScreen(
                 replyHomeUIState = replyHomeUIState,
                 closeDetailScreen = closeDetailScreen,
                 navigateToDetail = navigateToDetail,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
         } else {
             EmptyComingSoon(modifier = Modifier.weight(1f))
@@ -82,15 +81,14 @@ fun ReplyAppContent(
                     icon = {
                         Icon(
                             imageVector = replyDestination.selectedIcon,
-                            contentDescription = stringResource(id = replyDestination.iconTextId)
+                            contentDescription = stringResource(id = replyDestination.iconTextId),
                         )
-                    }
+                    },
                 )
             }
         }
     }
 }
-
 
 object ReplyRoute {
     const val INBOX = "Inbox"
@@ -103,32 +101,33 @@ data class ReplyTopLevelDestination(
     val route: String,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector,
-    val iconTextId: Int
+    val iconTextId: Int,
 )
 
-val TOP_LEVEL_DESTINATIONS = listOf(
-    ReplyTopLevelDestination(
-        route = ReplyRoute.INBOX,
-        selectedIcon = Icons.Default.Inbox,
-        unselectedIcon = Icons.Default.Inbox,
-        iconTextId = R.string.tab_inbox
-    ),
-    ReplyTopLevelDestination(
-        route = ReplyRoute.ARTICLES,
-        selectedIcon = Icons.Default.Article,
-        unselectedIcon = Icons.Default.Article,
-        iconTextId = R.string.tab_article
-    ),
-    ReplyTopLevelDestination(
-        route = ReplyRoute.DM,
-        selectedIcon = Icons.Outlined.ChatBubbleOutline,
-        unselectedIcon = Icons.Outlined.ChatBubbleOutline,
-        iconTextId = R.string.tab_dm
-    ),
-    ReplyTopLevelDestination(
-        route = ReplyRoute.GROUPS,
-        selectedIcon = Icons.Default.People,
-        unselectedIcon = Icons.Default.People,
-        iconTextId = R.string.tab_groups
+val TOP_LEVEL_DESTINATIONS =
+    listOf(
+        ReplyTopLevelDestination(
+            route = ReplyRoute.INBOX,
+            selectedIcon = Icons.Default.Inbox,
+            unselectedIcon = Icons.Default.Inbox,
+            iconTextId = R.string.tab_inbox,
+        ),
+        ReplyTopLevelDestination(
+            route = ReplyRoute.ARTICLES,
+            selectedIcon = Icons.Default.Article,
+            unselectedIcon = Icons.Default.Article,
+            iconTextId = R.string.tab_article,
+        ),
+        ReplyTopLevelDestination(
+            route = ReplyRoute.DM,
+            selectedIcon = Icons.Outlined.ChatBubbleOutline,
+            unselectedIcon = Icons.Outlined.ChatBubbleOutline,
+            iconTextId = R.string.tab_dm,
+        ),
+        ReplyTopLevelDestination(
+            route = ReplyRoute.GROUPS,
+            selectedIcon = Icons.Default.People,
+            unselectedIcon = Icons.Default.People,
+            iconTextId = R.string.tab_groups,
+        ),
     )
-)

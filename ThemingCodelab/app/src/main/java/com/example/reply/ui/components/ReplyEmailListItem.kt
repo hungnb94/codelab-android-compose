@@ -26,9 +26,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -46,18 +47,29 @@ fun ReplyEmailListItem(
     email: Email,
     isSelected: Boolean = false,
     modifier: Modifier = Modifier,
-    navigateToDetail: (Long) -> Unit
+    navigateToDetail: (Long) -> Unit,
 ) {
     Card(
-        modifier =  modifier
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .semantics { selected = isSelected }
-            .clickable { navigateToDetail(email.id) },
+        modifier =
+            modifier
+                .padding(horizontal = 16.dp, vertical = 4.dp)
+                .semantics { selected = isSelected }
+                .clickable { navigateToDetail(email.id) },
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    if (email.isImportant) {
+                        MaterialTheme.colorScheme.secondaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    },
+            ),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
         ) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 ReplyProfileImage(
@@ -65,10 +77,11 @@ fun ReplyEmailListItem(
                     description = email.sender.fullName,
                 )
                 Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 12.dp, vertical = 4.dp),
-                    verticalArrangement = Arrangement.Center
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
+                    verticalArrangement = Arrangement.Center,
                 ) {
                     Text(
                         text = email.sender.firstName,
@@ -79,9 +92,9 @@ fun ReplyEmailListItem(
                 }
                 IconButton(
                     onClick = { /*Click Implementation*/ },
-                    modifier = Modifier
-                        .clip(CircleShape)
-
+                    modifier =
+                        Modifier
+                            .clip(CircleShape),
                 ) {
                     Icon(
                         imageVector = Icons.Default.StarBorder,
@@ -97,7 +110,7 @@ fun ReplyEmailListItem(
             Text(
                 text = email.body,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
