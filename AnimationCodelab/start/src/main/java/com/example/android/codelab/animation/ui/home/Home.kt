@@ -129,6 +129,8 @@ import com.example.android.codelab.animation.ui.Seashell
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.absoluteValue
+import kotlin.math.roundToInt
 
 private enum class TabPage {
     Home, Work
@@ -506,7 +508,8 @@ private fun HomeTabIndicator(
             } else {
                 spring(stiffness = Spring.StiffnessVeryLow)
             }
-        }, label = "Indicator right") { page ->
+        }, label = "Indicator right"
+    ) { page ->
         tabPositions[page.ordinal].right
     }
     val color by transition.animateColor(label = "Color") { page ->
@@ -699,19 +702,23 @@ private fun Modifier.swipeToDismiss(
                 // Dragging finished. Calculate the velocity of the fling.
                 val velocity = velocityTracker.calculateVelocity().x
                 val targetOffsetX = decay.calculateTargetValue(offsetX.value, velocity)
-                // TODO 6-5: Set the upper and lower bounds so that the animation stops when it
-                //           reaches the edge.
-                offsetX.updateBounds(lowerBound = -size.width.toFloat(), upperBound = size.width.toFloat())
+                offsetX.updateBounds(
+                    lowerBound = -size.width.toFloat(),
+                    upperBound = size.width.toFloat()
+                )
                 launch {
-                    // TODO 6-6: Slide back the element if the settling position does not go beyond
-                    //           the size of the element. Remove the element if it does.
+                    if (targetOffsetX.absoluteValue < size.width) {
+                        offsetX.animateTo(targetValue = 0f, initialVelocity = velocity)
+                    } else {
+                        offsetX.animateDecay(velocity, decay)
+                        onDismissed()
+                    }
                 }
             }
         }
     }
         .offset {
-            // TODO 6-7: Use the animating offset value here.
-            IntOffset(0, 0)
+            IntOffset(offsetX.value.roundToInt(), 0)
         }
 }
 
