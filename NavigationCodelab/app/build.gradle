@@ -106,6 +106,7 @@ dependencies {
 
     // Compose testing dependencies
     androidTestImplementation "androidx.compose.ui:ui-test-junit4"
+    androidTestImplementation "androidx.navigation:navigation-testing:2.9.4"
     debugImplementation "androidx.compose.ui:ui-test-manifest"
 }
 
