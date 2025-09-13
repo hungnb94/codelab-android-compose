@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.samples.crane.base.CraneDrawer
 import androidx.compose.samples.crane.base.CraneTabBar
@@ -38,11 +39,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 
 typealias OnExploreItemClicked = (ExploreModel) -> Unit
 
 enum class CraneScreen {
-    Fly, Sleep, Eat
+    Fly,
+    Sleep,
+    Eat,
 }
 
 @Composable
@@ -56,15 +60,17 @@ fun CraneHome(
         modifier = Modifier.statusBarsPadding(),
         drawerContent = {
             CraneDrawer()
-        }
+        },
     ) { padding ->
+        val scope = rememberCoroutineScope()
         CraneHomeContent(
             modifier = modifier.padding(padding),
             onExploreItemClicked = onExploreItemClicked,
             openDrawer = {
-                // TODO Codelab: rememberCoroutineScope step - open the navigation drawer
-                // scaffoldState.drawerState.open()
-            }
+                scope.launch {
+                    scaffoldState.drawerState.open()
+                }
+            },
         )
     }
 }
@@ -93,7 +99,7 @@ fun CraneHomeContent(
             SearchContent(
                 tabSelected,
                 viewModel,
-                onPeopleChanged
+                onPeopleChanged,
             )
         },
         frontLayerContent = {
@@ -102,25 +108,27 @@ fun CraneHomeContent(
                     ExploreSection(
                         title = "Explore Flights by Destination",
                         exploreList = suggestedDestinations,
-                        onItemClicked = onExploreItemClicked
+                        onItemClicked = onExploreItemClicked,
                     )
                 }
+
                 CraneScreen.Sleep -> {
                     ExploreSection(
                         title = "Explore Properties by Destination",
                         exploreList = viewModel.hotels,
-                        onItemClicked = onExploreItemClicked
+                        onItemClicked = onExploreItemClicked,
                     )
                 }
+
                 CraneScreen.Eat -> {
                     ExploreSection(
                         title = "Explore Restaurants by Destination",
                         exploreList = viewModel.restaurants,
-                        onItemClicked = onExploreItemClicked
+                        onItemClicked = onExploreItemClicked,
                     )
                 }
             }
-        }
+        },
     )
 }
 
@@ -129,17 +137,17 @@ private fun HomeTabBar(
     openDrawer: () -> Unit,
     tabSelected: CraneScreen,
     onTabSelected: (CraneScreen) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     CraneTabBar(
         modifier = modifier,
-        onMenuClicked = openDrawer
+        onMenuClicked = openDrawer,
     ) { tabBarModifier ->
         CraneTabs(
             modifier = tabBarModifier,
             titles = CraneScreen.values().map { it.name },
             tabSelected = tabSelected,
-            onTabSelected = { newTab -> onTabSelected(CraneScreen.values()[newTab.ordinal]) }
+            onTabSelected = { newTab -> onTabSelected(CraneScreen.values()[newTab.ordinal]) },
         )
     }
 }
@@ -148,18 +156,23 @@ private fun HomeTabBar(
 private fun SearchContent(
     tabSelected: CraneScreen,
     viewModel: MainViewModel,
-    onPeopleChanged: (Int) -> Unit
+    onPeopleChanged: (Int) -> Unit,
 ) {
     when (tabSelected) {
-        CraneScreen.Fly -> FlySearchContent(
-            onPeopleChanged = onPeopleChanged,
-            onToDestinationChanged = { viewModel.toDestinationChanged(it) }
-        )
-        CraneScreen.Sleep -> SleepSearchContent(
-            onPeopleChanged = onPeopleChanged
-        )
-        CraneScreen.Eat -> EatSearchContent(
-            onPeopleChanged = onPeopleChanged
-        )
+        CraneScreen.Fly ->
+            FlySearchContent(
+                onPeopleChanged = onPeopleChanged,
+                onToDestinationChanged = { viewModel.toDestinationChanged(it) },
+            )
+
+        CraneScreen.Sleep ->
+            SleepSearchContent(
+                onPeopleChanged = onPeopleChanged,
+            )
+
+        CraneScreen.Eat ->
+            EatSearchContent(
+                onPeopleChanged = onPeopleChanged,
+            )
     }
 }
