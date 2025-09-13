@@ -16,7 +16,11 @@
 
 package com.example.compose.rally.ui.overview
 
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.animateValue
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -38,7 +42,6 @@ import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +53,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.compose.rally.R
 import com.example.compose.rally.RallyScreen
@@ -65,9 +69,10 @@ import java.util.Locale
 @Composable
 fun OverviewBody(onScreenChange: (RallyScreen) -> Unit = {}) {
     Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState())
+        modifier =
+            Modifier
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
     ) {
         AlertCard()
         Spacer(Modifier.height(RallyDefaultPadding))
@@ -91,33 +96,28 @@ private fun AlertCard() {
                 showDialog = false
             },
             bodyText = alertMessage,
-            buttonText = "Dismiss".uppercase(Locale.getDefault())
+            buttonText = "Dismiss".uppercase(Locale.getDefault()),
         )
     }
 
-    var currentTargetElevation by remember { mutableStateOf(1.dp) }
-    LaunchedEffect(Unit) {
-        // Start the animation
-        currentTargetElevation = 8.dp
-    }
-    val animatedElevation = animateDpAsState(
-        targetValue = currentTargetElevation,
-        animationSpec = tween(durationMillis = 500),
-        finishedListener = {
-            currentTargetElevation = if (currentTargetElevation > 4.dp) {
-                1.dp
-            } else {
-                8.dp
-            }
-        }
+    val infiniteElevationAnimation = rememberInfiniteTransition()
+    val animatedElevation: Dp by infiniteElevationAnimation.animateValue(
+        initialValue = 1.dp,
+        targetValue = 8.dp,
+        typeConverter = Dp.VectorConverter,
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(500),
+                repeatMode = RepeatMode.Reverse,
+            ),
     )
-    Card(elevation = animatedElevation.value) {
+    Card(elevation = animatedElevation) {
         Column {
             AlertHeader {
                 showDialog = true
             }
             RallyDivider(
-                modifier = Modifier.padding(start = RallyDefaultPadding, end = RallyDefaultPadding)
+                modifier = Modifier.padding(start = RallyDefaultPadding, end = RallyDefaultPadding),
             )
             AlertItem(alertMessage)
         }
@@ -135,24 +135,25 @@ fun AlertCardPreview() {
 @Composable
 private fun AlertHeader(onClickSeeAll: () -> Unit) {
     Row(
-        modifier = Modifier
-            .padding(RallyDefaultPadding)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier =
+            Modifier
+                .padding(RallyDefaultPadding)
+                .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             text = "Alerts",
             style = MaterialTheme.typography.subtitle2,
-            modifier = Modifier.align(Alignment.CenterVertically)
+            modifier = Modifier.align(Alignment.CenterVertically),
         )
         TextButton(
             onClick = onClickSeeAll,
             contentPadding = PaddingValues(0.dp),
-            modifier = Modifier.align(Alignment.CenterVertically)
+            modifier = Modifier.align(Alignment.CenterVertically),
         ) {
             Text(
                 text = "SEE ALL",
-                style = MaterialTheme.typography.button
+                style = MaterialTheme.typography.button,
             )
         }
     }
@@ -161,25 +162,27 @@ private fun AlertHeader(onClickSeeAll: () -> Unit) {
 @Composable
 private fun AlertItem(message: String) {
     Row(
-        modifier = Modifier
-            .padding(RallyDefaultPadding)
-            // Regard the whole row as one semantics node. This way each row will receive focus as
-            // a whole and the focus bounds will be around the whole row content. The semantics
-            // properties of the descendants will be merged. If we'd use clearAndSetSemantics instead,
-            // we'd have to define the semantics properties explicitly.
-            .semantics(mergeDescendants = true) {},
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier =
+            Modifier
+                .padding(RallyDefaultPadding)
+                // Regard the whole row as one semantics node. This way each row will receive focus as
+                // a whole and the focus bounds will be around the whole row content. The semantics
+                // properties of the descendants will be merged. If we'd use clearAndSetSemantics instead,
+                // we'd have to define the semantics properties explicitly.
+                .semantics(mergeDescendants = true) {},
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             style = MaterialTheme.typography.body2,
             modifier = Modifier.weight(1f),
-            text = message
+            text = message,
         )
         IconButton(
             onClick = {},
-            modifier = Modifier
-                .align(Alignment.Top)
-                .clearAndSetSemantics {}
+            modifier =
+                Modifier
+                    .align(Alignment.Top)
+                    .clearAndSetSemantics {},
         ) {
             Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = null)
         }
@@ -197,15 +200,17 @@ private fun <T> OverviewScreenCard(
     values: (T) -> Float,
     colors: (T) -> Color,
     data: List<T>,
-    row: @Composable (T) -> Unit
+    row: @Composable (T) -> Unit,
 ) {
     Card {
         Column {
             Column(Modifier.padding(RallyDefaultPadding)) {
                 Text(text = title, style = MaterialTheme.typography.subtitle2)
-                val amountText = "$" + formatAmount(
-                    amount
-                )
+                val amountText =
+                    "$" +
+                        formatAmount(
+                            amount,
+                        )
                 Text(text = amountText, style = MaterialTheme.typography.h2)
             }
             OverViewDivider(data, values, colors)
@@ -221,15 +226,16 @@ private fun <T> OverviewScreenCard(
 private fun <T> OverViewDivider(
     data: List<T>,
     values: (T) -> Float,
-    colors: (T) -> Color
+    colors: (T) -> Color,
 ) {
     Row(Modifier.fillMaxWidth()) {
         data.forEach { item: T ->
             Spacer(
-                modifier = Modifier
-                    .weight(values(item))
-                    .height(1.dp)
-                    .background(colors(item))
+                modifier =
+                    Modifier
+                        .weight(values(item))
+                        .height(1.dp)
+                        .background(colors(item)),
             )
         }
     }
@@ -249,13 +255,13 @@ private fun AccountsCard(onScreenChange: (RallyScreen) -> Unit) {
         },
         data = UserData.accounts,
         colors = { it.color },
-        values = { it.balance }
+        values = { it.balance },
     ) { account ->
         AccountRow(
             name = account.name,
             number = account.number,
             amount = account.balance,
-            color = account.color
+            color = account.color,
         )
     }
 }
@@ -274,13 +280,13 @@ private fun BillsCard(onScreenChange: (RallyScreen) -> Unit) {
         },
         data = UserData.bills,
         colors = { it.color },
-        values = { it.amount }
+        values = { it.amount },
     ) { bill ->
         BillRow(
             name = bill.name,
             due = bill.due,
             amount = bill.amount,
-            color = bill.color
+            color = bill.color,
         )
     }
 }
@@ -289,9 +295,10 @@ private fun BillsCard(onScreenChange: (RallyScreen) -> Unit) {
 private fun SeeAllButton(onClick: () -> Unit) {
     TextButton(
         onClick = onClick,
-        modifier = Modifier
-            .height(44.dp)
-            .fillMaxWidth()
+        modifier =
+            Modifier
+                .height(44.dp)
+                .fillMaxWidth(),
     ) {
         Text(stringResource(R.string.see_all))
     }
