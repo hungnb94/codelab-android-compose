@@ -24,19 +24,24 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.samples.crane.R
 import androidx.compose.samples.crane.base.CraneEditableUserInput
 import androidx.compose.samples.crane.base.CraneUserInput
+import androidx.compose.samples.crane.base.rememberEditableUserInputState
 import androidx.compose.samples.crane.home.PeopleUserInputAnimationState.Invalid
 import androidx.compose.samples.crane.home.PeopleUserInputAnimationState.Valid
 import androidx.compose.samples.crane.ui.CraneTheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import kotlinx.coroutines.flow.filter
 
 enum class PeopleUserInputAnimationState { Valid, Invalid }
 
@@ -54,8 +59,11 @@ class PeopleUserInputState {
 
     private fun updateAnimationState() {
         val newState =
-            if (people > MAX_PEOPLE) Invalid
-            else Valid
+            if (people > MAX_PEOPLE) {
+                Invalid
+            } else {
+                Valid
+            }
 
         if (animationState.currentState != newState) animationState.targetState = newState
     }
@@ -65,7 +73,7 @@ class PeopleUserInputState {
 fun PeopleUserInput(
     titleSuffix: String? = "",
     onPeopleChanged: (Int) -> Unit,
-    peopleState: PeopleUserInputState = remember { PeopleUserInputState() }
+    peopleState: PeopleUserInputState = remember { PeopleUserInputState() },
 ) {
     Column {
         val transitionState = remember { peopleState.animationState }
@@ -79,12 +87,12 @@ fun PeopleUserInput(
             onClick = {
                 peopleState.addPerson()
                 onPeopleChanged(peopleState.people)
-            }
+            },
         )
         if (transitionState.targetState == Invalid) {
             Text(
                 text = "Error: We don't support more than $MAX_PEOPLE people",
-                style = MaterialTheme.typography.body1.copy(color = MaterialTheme.colors.secondary)
+                style = MaterialTheme.typography.body1.copy(color = MaterialTheme.colors.secondary),
             )
         }
     }
@@ -97,12 +105,21 @@ fun FromDestination() {
 
 @Composable
 fun ToDestinationUserInput(onToDestinationChanged: (String) -> Unit) {
+    val editableUserInputState = rememberEditableUserInputState("Choose Destination")
     CraneEditableUserInput(
-        hint = "Choose Destination",
+        state = editableUserInputState,
         caption = "To",
         vectorImageId = R.drawable.ic_plane,
-        onInputChanged = onToDestinationChanged
     )
+
+    val currentOnDestinationChanged by rememberUpdatedState(onToDestinationChanged)
+    LaunchedEffect(editableUserInputState) {
+        snapshotFlow { editableUserInputState.text }
+            .filter { !editableUserInputState.isHint }
+            .collect {
+                currentOnDestinationChanged(editableUserInputState.text)
+            }
+    }
 }
 
 @Composable
@@ -110,20 +127,19 @@ fun DatesUserInput() {
     CraneUserInput(
         caption = "Select Dates",
         text = "",
-        vectorImageId = R.drawable.ic_calendar
+        vectorImageId = R.drawable.ic_calendar,
     )
 }
 
 @Composable
-private fun tintPeopleUserInput(
-    transitionState: MutableTransitionState<PeopleUserInputAnimationState>
-): State<Color> {
+private fun tintPeopleUserInput(transitionState: MutableTransitionState<PeopleUserInputAnimationState>): State<Color> {
     val validColor = MaterialTheme.colors.onSurface
     val invalidColor = MaterialTheme.colors.secondary
 
     val transition = updateTransition(transitionState, label = "")
     return transition.animateColor(
-        transitionSpec = { tween(durationMillis = 300) }, label = ""
+        transitionSpec = { tween(durationMillis = 300) },
+        label = "",
     ) {
         if (it == Valid) validColor else invalidColor
     }
