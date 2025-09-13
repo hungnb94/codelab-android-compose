@@ -23,6 +23,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,6 +34,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -40,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -64,12 +67,18 @@ import kotlinx.coroutines.launch
 
 internal const val KEY_ARG_DETAILS_CITY_NAME = "KEY_ARG_DETAILS_CITY_NAME"
 
-fun launchDetailsActivity(context: Context, item: ExploreModel) {
+fun launchDetailsActivity(
+    context: Context,
+    item: ExploreModel,
+) {
     context.startActivity(createDetailsActivityIntent(context, item))
 }
 
 @VisibleForTesting
-fun createDetailsActivityIntent(context: Context, item: ExploreModel): Intent {
+fun createDetailsActivityIntent(
+    context: Context,
+    item: ExploreModel,
+): Intent {
     val intent = Intent(context, DetailsActivity::class.java)
     intent.putExtra(KEY_ARG_DETAILS_CITY_NAME, item.city.name)
     return intent
@@ -77,7 +86,6 @@ fun createDetailsActivityIntent(context: Context, item: ExploreModel): Intent {
 
 @AndroidEntryPoint
 class DetailsActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -88,7 +96,7 @@ class DetailsActivity : ComponentActivity() {
                 Surface {
                     DetailsScreen(
                         onErrorLoading = { finish() },
-                        modifier = Modifier.systemBarsPadding()
+                        modifier = Modifier.systemBarsPadding(),
                     )
                 }
             }
@@ -100,21 +108,41 @@ class DetailsActivity : ComponentActivity() {
 fun DetailsScreen(
     onErrorLoading: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: DetailsViewModel = viewModel()
+    viewModel: DetailsViewModel = viewModel(),
 ) {
-    // TODO Codelab: produceState step - Show loading screen while fetching city details
-    val cityDetails = remember(viewModel) { viewModel.cityDetails }
-    if (cityDetails is Result.Success<ExploreModel>) {
-        DetailsContent(cityDetails.data, modifier.fillMaxSize())
-    } else {
-        onErrorLoading()
+    val uiState by produceState(initialValue = DetailsUiState(isLoading = true)) {
+        val cityDetailsResult = viewModel.cityDetails
+        value =
+            if (cityDetailsResult is Result.Success<ExploreModel>) {
+                DetailsUiState(cityDetailsResult.data)
+            } else {
+                DetailsUiState(throwError = true)
+            }
+    }
+    when {
+        uiState.cityDetails != null -> {
+            DetailsContent(uiState.cityDetails!!, modifier.fillMaxSize())
+        }
+
+        uiState.isLoading -> {
+            Box(modifier.fillMaxSize()) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colors.onSurface,
+                    modifier = Modifier.align(Alignment.Center),
+                )
+            }
+        }
+
+        else -> {
+            onErrorLoading()
+        }
     }
 }
 
 @Composable
 fun DetailsContent(
     exploreModel: ExploreModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.Center) {
         Spacer(Modifier.height(32.dp))
@@ -122,13 +150,13 @@ fun DetailsContent(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             text = exploreModel.city.nameToDisplay,
             style = MaterialTheme.typography.h4,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
         Text(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             text = exploreModel.description,
             style = MaterialTheme.typography.h6,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(16.dp))
         CityMapView(exploreModel.city.latitude, exploreModel.city.longitude)
@@ -136,7 +164,10 @@ fun DetailsContent(
 }
 
 @Composable
-private fun CityMapView(latitude: String, longitude: String) {
+private fun CityMapView(
+    latitude: String,
+    longitude: String,
+) {
     // The MapView lifecycle is handled by this composable. As the MapView also needs to be updated
     // with input from Compose UI, those updates are encapsulated into the MapViewContainer
     // composable. In this way, when an update to the MapView happens, this composable won't
@@ -149,11 +180,12 @@ private fun CityMapView(latitude: String, longitude: String) {
 private fun MapViewContainer(
     map: MapView,
     latitude: String,
-    longitude: String
+    longitude: String,
 ) {
-    val cameraPosition = remember(latitude, longitude) {
-        LatLng(latitude.toDouble(), longitude.toDouble())
-    }
+    val cameraPosition =
+        remember(latitude, longitude) {
+            LatLng(latitude.toDouble(), longitude.toDouble())
+        }
 
     LaunchedEffect(map) {
         val googleMap = map.awaitMap()
@@ -183,7 +215,7 @@ private fun MapViewContainer(
 @Composable
 private fun ZoomControls(
     zoom: Float,
-    onZoomChanged: (Float) -> Unit
+    onZoomChanged: (Float) -> Unit,
 ) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
         ZoomButton("-", onClick = { onZoomChanged(zoom * 0.8f) })
@@ -192,14 +224,18 @@ private fun ZoomControls(
 }
 
 @Composable
-private fun ZoomButton(text: String, onClick: () -> Unit) {
+private fun ZoomButton(
+    text: String,
+    onClick: () -> Unit,
+) {
     Button(
         modifier = Modifier.padding(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            backgroundColor = MaterialTheme.colors.onPrimary,
-            contentColor = MaterialTheme.colors.primary
-        ),
-        onClick = onClick
+        colors =
+            ButtonDefaults.buttonColors(
+                backgroundColor = MaterialTheme.colors.onPrimary,
+                contentColor = MaterialTheme.colors.primary,
+            ),
+        onClick = onClick,
     ) {
         Text(text = text, style = MaterialTheme.typography.h5)
     }
@@ -208,3 +244,9 @@ private fun ZoomButton(text: String, onClick: () -> Unit) {
 private const val InitialZoom = 5f
 const val MinZoom = 2f
 const val MaxZoom = 20f
+
+data class DetailsUiState(
+    val cityDetails: ExploreModel? = null,
+    val isLoading: Boolean = false,
+    val throwError: Boolean = false,
+)
