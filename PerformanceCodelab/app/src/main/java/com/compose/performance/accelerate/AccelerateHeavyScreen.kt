@@ -39,11 +39,14 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,31 +62,37 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.tracing.trace
 import coil.compose.AsyncImage
 import com.compose.performance.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 
 @Composable
 fun AccelerateHeavyScreen(
     modifier: Modifier = Modifier,
-    viewModel: HeavyScreenViewModel = viewModel()
+    viewModel: HeavyScreenViewModel = viewModel(),
 ) {
     val items by viewModel.items.collectAsState()
     AccelerateHeavyScreen(items = items, modifier = modifier)
 }
 
 @Composable
-fun AccelerateHeavyScreen(items: List<HeavyItem>, modifier: Modifier = Modifier) {
-    // TODO: Codelab task: Wrap this with timezone provider
+fun AccelerateHeavyScreen(
+    items: List<HeavyItem>,
+    modifier: Modifier = Modifier,
+) {
+    ProvideCurrentTimeZone {
+        Box(
+            modifier =
+                modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+        ) {
+            ScreenContent(items = items)
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp)
-    ) {
-        ScreenContent(items = items)
-        
-        if (items.isEmpty()) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            if (items.isEmpty()) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
         }
     }
 }
@@ -91,19 +100,23 @@ fun AccelerateHeavyScreen(items: List<HeavyItem>, modifier: Modifier = Modifier)
 @Composable
 fun ScreenContent(items: List<HeavyItem>) {
     LazyVerticalGrid(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("list_of_items"),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .testTag("list_of_items"),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        columns = GridCells.Fixed(2)
+        columns = GridCells.Fixed(2),
     ) {
         items(items) { item -> HeavyItem(item) }
     }
 }
 
 @Composable
-fun HeavyItem(item: HeavyItem, modifier: Modifier = Modifier) {
+fun HeavyItem(
+    item: HeavyItem,
+    modifier: Modifier = Modifier,
+) {
     Column(modifier = modifier) {
         Text(text = item.description, style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(8.dp))
@@ -113,13 +126,14 @@ fun HeavyItem(item: HeavyItem, modifier: Modifier = Modifier) {
         Box {
             AsyncImage(
                 model = item.url,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .shadow(8.dp, RoundedCornerShape(12.dp)),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                        .shadow(8.dp, RoundedCornerShape(12.dp)),
                 contentDescription = stringResource(R.string.performance_dashboard),
                 placeholder = imagePlaceholder(),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
             )
 
             ItemTags(item.tags, Modifier.align(Alignment.BottomCenter))
@@ -128,73 +142,91 @@ fun HeavyItem(item: HeavyItem, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun imagePlaceholder() = trace("ImagePlaceholder") {
-    painterResource(R.drawable.placeholder_vector)
-}
+fun imagePlaceholder() =
+    trace("ImagePlaceholder") {
+        painterResource(R.drawable.placeholder_vector)
+    }
 
 /**
  * TODO Codelab task: Remove the side effect from every item and hoist it to the parent composable
  */
 @Composable
-fun PublishedText(published: Instant, modifier: Modifier = Modifier) {
+fun PublishedText(
+    published: Instant,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = published.format(LocalTimeZone.current),
+        style = MaterialTheme.typography.labelMedium,
+        modifier = modifier,
+    )
+}
+
+val LocalTimeZone = compositionLocalOf { TimeZone.currentSystemDefault() }
+
+@Composable
+fun ProvideCurrentTimeZone(content: @Composable () -> Unit) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var currentTimeZone: TimeZone by remember { mutableStateOf(TimeZone.currentSystemDefault()) }
 
     DisposableEffect(Unit) {
-        val receiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                currentTimeZone = TimeZone.currentSystemDefault()
+        val receiver =
+            object : BroadcastReceiver() {
+                override fun onReceive(
+                    context: Context?,
+                    intent: Intent?,
+                ) {
+                    currentTimeZone = TimeZone.currentSystemDefault()
+                }
+            }
+
+        scope.launch(Dispatchers.IO) {
+            trace("PublishDate.registerReceiver") {
+                context.registerReceiver(receiver, IntentFilter(Intent.ACTION_TIMEZONE_CHANGED))
             }
         }
-
-        // TODO Codelab task: Wrap with a custom trace section
-        context.registerReceiver(receiver, IntentFilter(Intent.ACTION_TIMEZONE_CHANGED))
 
         onDispose { context.unregisterReceiver(receiver) }
     }
 
-    Text(
-        text = published.format(currentTimeZone),
-        style = MaterialTheme.typography.labelMedium,
-        modifier = modifier
+    CompositionLocalProvider(
+        value = LocalTimeZone provides currentTimeZone,
+        content = content,
     )
-}
-
-/**
- * TODO Codelab task: Write a composition local provider that will always provide current TimeZone
- */
-@Composable
-fun ProvideCurrentTimeZone(content: @Composable () -> Unit) {
-    // TODO Codelab task: move the side effect for TimeZone changes
-    // TODO Codelab task: create a composition local for current TimeZone
-    content()
 }
 
 /**
  * TODO Codelab task: remove unnecessary lazy layout
  */
 @Composable
-fun ItemTags(tags: List<String>, modifier: Modifier = Modifier) {
+fun ItemTags(
+    tags: List<String>,
+    modifier: Modifier = Modifier,
+) {
     LazyRow(
-        modifier = modifier
-            .padding(4.dp)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(2.dp)
+        modifier =
+            modifier
+                .padding(4.dp)
+                .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         items(tags) { ItemTag(it) }
     }
 }
 
 @Composable
-fun ItemTag(tag: String) = trace("ItemTag") {
-    Text(
-        text = tag,
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onPrimary,
-        fontSize = 10.sp,
-        maxLines = 1,
-        modifier = Modifier
-            .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp))
-            .padding(2.dp)
-    )
-}
+fun ItemTag(tag: String) =
+    trace("ItemTag") {
+        Text(
+            text = tag,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onPrimary,
+            fontSize = 10.sp,
+            maxLines = 1,
+            modifier =
+                Modifier
+                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp))
+                    .padding(2.dp),
+        )
+    }
