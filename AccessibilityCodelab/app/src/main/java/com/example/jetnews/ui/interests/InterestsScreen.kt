@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Divider
@@ -41,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -96,7 +98,7 @@ fun InterestsScreen(
     selectedTopics: Set<TopicSelection>,
     onTopicSelect: (TopicSelection) -> Unit,
     openDrawer: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Scaffold(
         topBar = {
@@ -106,29 +108,30 @@ fun InterestsScreen(
                     IconButton(onClick = openDrawer) {
                         Icon(
                             painter = painterResource(R.drawable.ic_jetnews_logo),
-                            contentDescription = stringResource(R.string.cd_open_navigation_drawer)
+                            contentDescription = stringResource(R.string.cd_open_navigation_drawer),
                         )
                     }
-                }
+                },
             )
-        }
+        },
     ) { padding ->
         LazyColumn(
-            modifier = modifier.padding(padding)
+            modifier = modifier.padding(padding),
         ) {
             topics.forEach { (section, topics) ->
                 item {
                     Text(
                         text = section,
-                        modifier = Modifier
-                            .padding(16.dp),
-                        style = MaterialTheme.typography.titleMedium
+                        modifier =
+                            Modifier
+                                .padding(16.dp),
+                        style = MaterialTheme.typography.titleMedium,
                     )
                 }
                 items(topics) { topic ->
                     TopicItem(
                         itemTitle = topic,
-                        selected = selectedTopics.contains(TopicSelection(section, topic))
+                        selected = selectedTopics.contains(TopicSelection(section, topic)),
                     ) { onTopicSelect(TopicSelection(section, topic)) }
                     TopicDivider()
                 }
@@ -145,32 +148,43 @@ fun InterestsScreen(
  * @param onToggle (event) toggle selection for topic
  */
 @Composable
-private fun TopicItem(itemTitle: String, selected: Boolean, onToggle: () -> Unit) {
+private fun TopicItem(
+    itemTitle: String,
+    selected: Boolean,
+    onToggle: () -> Unit,
+) {
     val image = painterResource(R.drawable.placeholder_1_1)
     Row(
-        modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+        modifier =
+            Modifier
+                .toggleable(
+                    value = selected,
+                    onValueChange = { onToggle() },
+                    role = Role.Checkbox,
+                ).padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
         Image(
             painter = image,
             contentDescription = null,
-            modifier = Modifier
-                .align(Alignment.CenterVertically)
-                .size(56.dp, 56.dp)
-                .clip(RoundedCornerShape(4.dp))
+            modifier =
+                Modifier
+                    .align(Alignment.CenterVertically)
+                    .size(56.dp, 56.dp)
+                    .clip(RoundedCornerShape(4.dp)),
         )
         Text(
             text = itemTitle,
-            modifier = Modifier
-                .align(Alignment.CenterVertically)
-                .padding(16.dp),
-            style = MaterialTheme.typography.titleMedium
+            modifier =
+                Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(16.dp),
+            style = MaterialTheme.typography.titleMedium,
         )
         Spacer(Modifier.weight(1f))
         Checkbox(
             checked = selected,
-            onCheckedChange = { onToggle() },
-            modifier = Modifier.align(Alignment.CenterVertically)
+            onCheckedChange = null,
+            modifier = Modifier.align(Alignment.CenterVertically),
         )
     }
 }
@@ -182,7 +196,7 @@ private fun TopicItem(itemTitle: String, selected: Boolean, onToggle: () -> Unit
 private fun TopicDivider() {
     Divider(
         modifier = Modifier.padding(start = 90.dp),
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
     )
 }
 
@@ -195,7 +209,7 @@ fun PreviewInterestsScreen() {
     JetnewsTheme {
         InterestsScreen(
             interestsRepository = InterestsRepository(),
-            openDrawer = {}
+            openDrawer = {},
         )
     }
 }
