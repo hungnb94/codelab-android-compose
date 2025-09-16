@@ -127,12 +127,9 @@ fun HeavyItem(item: HeavyItem, modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * TODO Codelab task: Improve this placeholder_vector.xml loading
- */
 @Composable
 fun imagePlaceholder() = trace("ImagePlaceholder") {
-    painterResource(R.drawable.placeholder)
+    painterResource(R.drawable.placeholder_vector)
 }
 
 /**
