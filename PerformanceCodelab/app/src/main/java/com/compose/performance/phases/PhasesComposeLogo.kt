@@ -37,32 +37,36 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.util.trace
 import com.compose.performance.R
 
-
 @Composable
-fun PhasesComposeLogo() = trace("PhasesComposeLogo") {
-    val logo = painterResource(id = R.drawable.compose_logo)
-    var size by remember { mutableStateOf(IntSize.Zero) }
-    val logoPosition by logoPosition(size = size, logoSize = logo.intrinsicSize)
+fun PhasesComposeLogo() =
+    trace("PhasesComposeLogo") {
+        val logo = painterResource(id = R.drawable.compose_logo)
+        var size by remember { mutableStateOf(IntSize.Zero) }
+        val logoPosition by logoPosition(size = size, logoSize = logo.intrinsicSize)
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .onPlaced {
-                size = it.size
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .onPlaced {
+                        size = it.size
+                    },
+        ) {
+            with(LocalDensity.current) {
+                Image(
+                    painter = logo,
+                    contentDescription = "logo",
+                    modifier = Modifier.offset { IntOffset(logoPosition.x, logoPosition.y) },
+                )
             }
-    ) {
-        with(LocalDensity.current) {
-            Image(
-                painter = logo,
-                contentDescription = "logo",
-                modifier = Modifier.offset(logoPosition.x.toDp(), logoPosition.y.toDp())
-            )
         }
     }
-}
 
 @Composable
-fun logoPosition(size: IntSize, logoSize: Size): State<IntOffset> =
+fun logoPosition(
+    size: IntSize,
+    logoSize: Size,
+): State<IntOffset> =
     produceState(initialValue = IntOffset.Zero, size, logoSize) {
         if (size == IntSize.Zero) {
             this.value = IntOffset.Zero
