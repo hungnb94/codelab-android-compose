@@ -83,6 +83,8 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.window)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.material3.adaptive)
+    implementation(libs.androidx.material3.adaptive.navigation.suite)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

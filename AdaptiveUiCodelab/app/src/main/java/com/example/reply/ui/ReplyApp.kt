@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,38 +44,27 @@ fun ReplyApp(
     ReplyNavigationWrapperUI {
         ReplyAppContent(
             replyHomeUIState = replyHomeUIState,
-            onEmailClick = onEmailClick
+            onEmailClick = onEmailClick,
         )
     }
 }
 
 @Composable
-private fun ReplyNavigationWrapperUI(
-    content: @Composable () -> Unit = {}
-) {
+private fun ReplyNavigationWrapperUI(content: @Composable () -> Unit = {}) {
     var selectedDestination: ReplyDestination by remember {
         mutableStateOf(ReplyDestination.Inbox)
     }
 
-    // You will implement adaptive navigation here.
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.inverseOnSurface)
-    ) {
-        Box(modifier = Modifier.weight(1f)) {
-            content()
-        }
-
-        NavigationBar(modifier = Modifier.fillMaxWidth()) {
+    NavigationSuiteScaffold(
+        navigationSuiteItems = {
             ReplyDestination.entries.forEach {
-                NavigationBarItem(
+                item(
                     selected = it == selectedDestination,
-                    onClick = { /*TODO update selection*/ },
+                    onClick = {},
                     icon = {
                         Icon(
                             imageVector = it.icon,
-                            contentDescription = stringResource(it.labelRes)
+                            contentDescription = stringResource(it.labelRes),
                         )
                     },
                     label = {
@@ -82,7 +72,9 @@ private fun ReplyNavigationWrapperUI(
                     },
                 )
             }
-        }
+        },
+    ) {
+        content()
     }
 }
 
