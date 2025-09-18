@@ -57,9 +57,6 @@ class MainActivity : ComponentActivity() {
                 )
 
                 val adaptiveInfo = currentWindowAdaptiveInfo()
-                val sizeClassText =
-                    "${adaptiveInfo.windowSizeClass.windowWidthSizeClass}\n" +
-                        "${adaptiveInfo.windowSizeClass.windowHeightSizeClass}"
             }
         }
     }
